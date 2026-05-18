@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+ Share Extension Info.plist
+ - Uses a custom principal class (ShareViewController) instead of a storyboard
+ - Activation rule is broad (TRUEPREDICATE) so you can share URLs, images, files
+ - Point identifier is com.apple.share-services so Safari/Photos/Files can host it
+-->
+<plist version="1.0">
+<dict>
+    <key>NSExtension</key>
+    <dict>
+        <key>NSExtensionAttributes</key>
+        <dict>
+            <key>NSExtensionActivationRule</key>
+            <string>TRUEPREDICATE</string>
+        </dict>
+        <key>NSExtensionPointIdentifier</key>
+        <string>com.apple.share-services</string>
+        <key>NSExtensionPrincipalClass</key>
+        <string>$(PRODUCT_MODULE_NAME).ShareViewController</string>
+    </dict>
+</dict>
+</plist>
