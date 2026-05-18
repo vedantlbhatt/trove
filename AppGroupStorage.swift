@@ -10,7 +10,7 @@ import UIKit
 
 enum AppGroupStorage {
     // Replace with your real App Group identifier, e.g., "group.com.yourcompany.catchapp"
-    static let appGroupID = "group.com.vedantlbhatt"
+    static let appGroupID = "group.com.app.catch"
 
     // Directory inside the shared container for incoming items
     static let inboxDirectoryName = "ShareInbox"

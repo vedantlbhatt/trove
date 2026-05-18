@@ -7,8 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		395DB2F22FB91C7C00E4C555 /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 395DB2F12FB91C7C00E4C555 /* ShareViewController.swift */; };
-		395DB2F42FB91C9300E4C555 /* IslandCatchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 395DB2F32FB91C9300E4C555 /* IslandCatchView.swift */; };
 		395DB2F62FB91CB100E4C555 /* AppGroupStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 395DB2F52FB91CB100E4C555 /* AppGroupStorage.swift */; };
 		395DB3142FBAB14D00E4C555 /* Trove share extension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 395DB30A2FBAB14D00E4C555 /* Trove share extension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
@@ -55,8 +53,6 @@
 		394409772FB8E97800E044F2 /* Trove.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Trove.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		394409872FB8E97900E044F2 /* TroveTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TroveTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		394409912FB8E97900E044F2 /* TroveUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TroveUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		395DB2F12FB91C7C00E4C555 /* ShareViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
-		395DB2F32FB91C9300E4C555 /* IslandCatchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandCatchView.swift; sourceTree = "<group>"; };
 		395DB2F52FB91CB100E4C555 /* AppGroupStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppGroupStorage.swift; sourceTree = "<group>"; };
 		395DB30A2FBAB14D00E4C555 /* Trove share extension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "Trove share extension.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -137,8 +133,6 @@
 				394409942FB8E97900E044F2 /* TroveUITests */,
 				395DB30B2FBAB14D00E4C555 /* Trove share extension */,
 				394409782FB8E97800E044F2 /* Products */,
-				395DB2F12FB91C7C00E4C555 /* ShareViewController.swift */,
-				395DB2F32FB91C9300E4C555 /* IslandCatchView.swift */,
 				395DB2F52FB91CB100E4C555 /* AppGroupStorage.swift */,
 			);
 			sourceTree = "<group>";
@@ -333,8 +327,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				395DB2F22FB91C7C00E4C555 /* ShareViewController.swift in Sources */,
-				395DB2F42FB91C9300E4C555 /* IslandCatchView.swift in Sources */,
 				395DB2F62FB91CB100E4C555 /* AppGroupStorage.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -641,7 +633,7 @@
 				DEVELOPMENT_TEAM = A4YA8NU8Y8;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Trove share extension/Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = "Trove share extension";
+				INFOPLIST_KEY_CFBundleDisplayName = Trove;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				IPHONEOS_DEPLOYMENT_TARGET = 26.5;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -671,7 +663,7 @@
 				DEVELOPMENT_TEAM = A4YA8NU8Y8;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Trove share extension/Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = "Trove share extension";
+				INFOPLIST_KEY_CFBundleDisplayName = Trove;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				IPHONEOS_DEPLOYMENT_TARGET = 26.5;
 				LD_RUNPATH_SEARCH_PATHS = (
