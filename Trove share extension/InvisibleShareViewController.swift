@@ -2,12 +2,33 @@ import UIKit
 import SwiftUI
 import UniformTypeIdentifiers
 
+/// Lets SwiftUI draw in the status-bar / Dynamic Island region (above the safe area).
+private final class FullBleedHostingController<Content: View>: UIHostingController<Content> {
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.clipsToBounds = false
+        view.insetsLayoutMarginsFromSafeArea = false
+    }
+
+    override func viewSafeAreaInsetsDidChange() {
+        super.viewSafeAreaInsetsDidChange()
+        let inset = view.safeAreaInsets
+        additionalSafeAreaInsets = UIEdgeInsets(
+            top: -inset.top,
+            left: -inset.left,
+            bottom: -inset.bottom,
+            right: -inset.right
+        )
+    }
+}
+
 /// Fully transparent root view — avoids the default opaque white extension chrome.
 private final class TransparentRootView: UIView {
     override init(frame: CGRect) {
         super.init(frame: frame)
         backgroundColor = .clear
         isOpaque = false
+        clipsToBounds = false
     }
 
     required init?(coder: NSCoder) {
@@ -18,7 +39,7 @@ private final class TransparentRootView: UIView {
 class InvisibleShareViewController: UIViewController {
 
     private var didStartExtraction = false
-    private var hostingController: UIHostingController<IslandCatchView>?
+    private var hostingController: FullBleedHostingController<IslandCatchView>?
     private var pendingProviderAttempts = 0
     private var didPresentCanvas = false
 
@@ -42,17 +63,22 @@ class InvisibleShareViewController: UIViewController {
         super.viewDidLoad()
         view.backgroundColor = .clear
         view.isOpaque = false
+        view.clipsToBounds = false
         modalPresentationStyle = .overFullScreen
     }
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        clearPresentationChrome()
+        prepareOverlayEnvironment()
         extractSharedContentAndLoadUI()
     }
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
+        prepareOverlayEnvironment()
+    }
+
+    private func prepareOverlayEnvironment() {
         clearPresentationChrome()
     }
 
@@ -61,6 +87,7 @@ class InvisibleShareViewController: UIViewController {
         while let current = ancestor {
             current.backgroundColor = .clear
             current.isOpaque = false
+            current.clipsToBounds = false
             ancestor = current.superview
         }
     }
@@ -189,24 +216,22 @@ class InvisibleShareViewController: UIViewController {
         guard !didPresentCanvas else { return }
         didPresentCanvas = true
 
-        if let hostingController {
-            hostingController.rootView = IslandCatchView(
-                sharedImage: sharedImage,
-                onDismiss: { [weak self] in self?.dismissPipeline() },
-                onSaveData: { [weak self] data in self?.saveToAppGroup(imageData: data) }
-            )
-            return
-        }
-
-        let swiftUIView = IslandCatchView(
+        let islandView = IslandCatchView(
             sharedImage: sharedImage,
             onDismiss: { [weak self] in self?.dismissPipeline() },
             onSaveData: { [weak self] data in self?.saveToAppGroup(imageData: data) }
         )
 
-        let host = UIHostingController(rootView: swiftUIView)
+        if let hostingController {
+            hostingController.rootView = islandView
+            prepareOverlayEnvironment()
+            return
+        }
+
+        let host = FullBleedHostingController(rootView: islandView)
         host.view.backgroundColor = .clear
         host.view.isOpaque = false
+        host.view.clipsToBounds = false
 
         addChild(host)
         view.addSubview(host.view)
@@ -221,7 +246,7 @@ class InvisibleShareViewController: UIViewController {
 
         host.didMove(toParent: self)
         hostingController = host
-        clearPresentationChrome()
+        prepareOverlayEnvironment()
     }
 
     private func saveToAppGroup(imageData: Data) {
