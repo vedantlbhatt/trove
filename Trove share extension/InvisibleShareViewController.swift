@@ -1,6 +1,7 @@
 import UIKit
 import SwiftUI
 import UniformTypeIdentifiers
+import LinkPresentation
 
 /// Lets SwiftUI draw in the status-bar / Dynamic Island region (above the safe area).
 private final class FullBleedHostingController<Content: View>: UIHostingController<Content> {
@@ -69,16 +70,14 @@ class InvisibleShareViewController: UIViewController {
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        prepareOverlayEnvironment()
+        clearPresentationChrome()
+        undimParentSheets()
         extractSharedContentAndLoadUI()
+        scheduleSafetyDismissIfNeeded()
     }
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-        prepareOverlayEnvironment()
-    }
-
-    private func prepareOverlayEnvironment() {
         clearPresentationChrome()
     }
 
@@ -89,6 +88,26 @@ class InvisibleShareViewController: UIViewController {
             current.isOpaque = false
             current.clipsToBounds = false
             ancestor = current.superview
+        }
+    }
+
+    /// Only adjust sheet detents on ancestors — do not walk/hide system backdrop views.
+    private func undimParentSheets() {
+        var current: UIViewController? = self
+        while let controller = current {
+            if let sheet = controller.sheetPresentationController {
+                if #available(iOS 16.0, *) {
+                    sheet.largestUndimmedDetentIdentifier = .large
+                }
+            }
+            current = controller.parent ?? controller.presentingViewController
+        }
+    }
+
+    private func scheduleSafetyDismissIfNeeded() {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5) { [weak self] in
+            guard let self, !self.didPresentCanvas else { return }
+            self.dismissPipeline()
         }
     }
 
@@ -115,12 +134,23 @@ class InvisibleShareViewController: UIViewController {
     }
 
     private func attemptLoad(from provider: NSItemProvider) {
-        // Preview loads reliably from Photos even when full item loading fails.
         provider.loadPreviewImage(options: nil) { [weak self] item, _ in
             DispatchQueue.main.async {
                 guard let self, !self.didPresentCanvas else { return }
                 if let image = item as? UIImage {
                     self.presentCanvas(with: image)
+                }
+            }
+        }
+
+        if provider.hasItemConformingToTypeIdentifier(UTType.url.identifier) {
+            provider.loadItem(forTypeIdentifier: UTType.url.identifier, options: nil) { [weak self] item, _ in
+                guard let url = item as? URL else { return }
+                Self.loadLinkPreviewImage(for: url) { image in
+                    DispatchQueue.main.async {
+                        guard let self, let image, !self.didPresentCanvas else { return }
+                        self.presentCanvas(with: image)
+                    }
                 }
             }
         }
@@ -131,11 +161,25 @@ class InvisibleShareViewController: UIViewController {
         }
     }
 
+    private static func loadLinkPreviewImage(for url: URL, completion: @escaping (UIImage?) -> Void) {
+        LPMetadataProvider().startFetchingMetadata(for: url) { metadata, _ in
+            let imageProvider = metadata?.imageProvider ?? metadata?.iconProvider
+            guard let imageProvider else {
+                DispatchQueue.main.async { completion(nil) }
+                return
+            }
+            imageProvider.loadObject(ofClass: UIImage.self) { object, _ in
+                DispatchQueue.main.async {
+                    completion(object as? UIImage)
+                }
+            }
+        }
+    }
+
     private func providerAttemptFinished() {
         pendingProviderAttempts -= 1
         guard pendingProviderAttempts <= 0, !didPresentCanvas else { return }
-        // Preview callbacks often arrive after file/item loaders fail — brief grace period.
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { [weak self] in
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { [weak self] in
             guard let self, !self.didPresentCanvas else { return }
             self.dismissPipeline()
         }
@@ -212,19 +256,26 @@ class InvisibleShareViewController: UIViewController {
         return nil
     }
 
+    private func overlayScreenBounds() -> CGRect {
+        if let screen = view.window?.windowScene?.screen {
+            return screen.bounds
+        }
+        return view.bounds
+    }
+
     private func presentCanvas(with sharedImage: UIImage) {
         guard !didPresentCanvas else { return }
         didPresentCanvas = true
 
         let islandView = IslandCatchView(
             sharedImage: sharedImage,
+            screenBounds: overlayScreenBounds(),
             onDismiss: { [weak self] in self?.dismissPipeline() },
             onSaveData: { [weak self] data in self?.saveToAppGroup(imageData: data) }
         )
 
         if let hostingController {
             hostingController.rootView = islandView
-            prepareOverlayEnvironment()
             return
         }
 
@@ -246,7 +297,6 @@ class InvisibleShareViewController: UIViewController {
 
         host.didMove(toParent: self)
         hostingController = host
-        prepareOverlayEnvironment()
     }
 
     private func saveToAppGroup(imageData: Data) {
