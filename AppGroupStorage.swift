@@ -124,4 +124,41 @@ enum AppGroupStorage {
     static func clearInbox() {
         defaults?.removeObject(forKey: inboxKey)
     }
+
+    // MARK: - Share capture handoff (extension → main app)
+
+    static let captureImageFilename = "captured_media.jpg"
+    private static let pendingCaptureKey = "capture.pending"
+
+    static func markCapturePending() {
+        defaults?.set(true, forKey: pendingCaptureKey)
+    }
+
+    static func consumeCapturePending() -> Bool {
+        guard defaults?.bool(forKey: pendingCaptureKey) == true else { return false }
+        defaults?.set(false, forKey: pendingCaptureKey)
+        return true
+    }
+
+    static func captureImageURL() -> URL? {
+        containerURL()?.appendingPathComponent(captureImageFilename)
+    }
+
+    @discardableResult
+    static func saveCaptureImage(_ image: UIImage, quality: CGFloat = 0.85) -> URL? {
+        guard let url = captureImageURL(), let data = image.jpegData(compressionQuality: quality) else { return nil }
+        do {
+            try data.write(to: url, options: .atomic)
+            return url
+        } catch {
+            print("AppGroupStorage: failed to write capture image: \(error)")
+            return nil
+        }
+    }
+
+    static func loadCaptureImage() -> UIImage? {
+        guard let url = captureImageURL(),
+              let data = try? Data(contentsOf: url) else { return nil }
+        return UIImage(data: data)
+    }
 }

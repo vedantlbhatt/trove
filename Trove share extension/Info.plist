@@ -10,13 +10,11 @@
 		<dict>
 			<key>NSExtensionActivationRule</key>
 			<string>TRUEPREDICATE</string>
-			<key>NSExtensionActionWantsFullScreenPresentation</key>
-			<true/>
 		</dict>
 		<key>NSExtensionPointIdentifier</key>
 		<string>com.apple.share-services</string>
 		<key>NSExtensionPrincipalClass</key>
-		<string>$(PRODUCT_MODULE_NAME).InvisibleShareViewController</string>
+		<string>$(PRODUCT_MODULE_NAME).InvisibleShareRequestHandler</string>
 	</dict>
 </dict>
 </plist>

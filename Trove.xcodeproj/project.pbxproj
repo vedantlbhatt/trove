@@ -58,6 +58,13 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		3944099F2FB8E97900E044F3 /* Exceptions for "Trove" folder in "Trove" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 394409762FB8E97800E044F2 /* Trove */;
+		};
 		395DB3182FBAB14D00E4C555 /* Exceptions for "Trove share extension" folder in "Trove share extension" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -70,6 +77,9 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		394409792FB8E97800E044F2 /* Trove */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				3944099F2FB8E97900E044F3 /* Exceptions for "Trove" folder in "Trove" target */,
+			);
 			path = Trove;
 			sourceTree = "<group>";
 		};
@@ -504,6 +514,7 @@
 				DEVELOPMENT_TEAM = A4YA8NU8Y8;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Trove/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -534,6 +545,7 @@
 				DEVELOPMENT_TEAM = A4YA8NU8Y8;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Trove/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
