@@ -1,21 +1,18 @@
-//
-//  ContentView.swift
-//  Trove
-//
-//  Created by Vedant Bhatt on 5/16/26.
-//
-
 import SwiftUI
 
 struct ContentView: View {
+    @StateObject private var store = AssetCanvasStore()
+    @State private var panOffset = CGSize.zero
+    @Environment(\.scenePhase) private var scenePhase
+
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
-        }
-        .padding()
+        InfiniteDotCanvasView(assets: store.assets, panOffset: $panOffset)
+            .onAppear { store.reload() }
+            .onChange(of: scenePhase) { _, phase in
+                if phase == .active {
+                    store.reload()
+                }
+            }
     }
 }
 

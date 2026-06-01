@@ -161,4 +161,69 @@ enum AppGroupStorage {
               let data = try? Data(contentsOf: url) else { return nil }
         return UIImage(data: data)
     }
+
+    // MARK: - Visual asset library
+
+    struct SavedAsset: Identifiable, Equatable {
+        let id: String
+        let fileURL: URL
+        let createdAt: Date
+    }
+
+    private static let visualExtensions: Set<String> = ["jpg", "jpeg", "png", "heic", "gif", "webp"]
+
+    static func fetchVisualAssets() -> [SavedAsset] {
+        var assets: [SavedAsset] = []
+
+        if let inbox = inboxDirectoryURL(),
+           let urls = try? FileManager.default.contentsOfDirectory(
+            at: inbox,
+            includingPropertiesForKeys: [.creationDateKey],
+            options: [.skipsHiddenFiles]
+           ) {
+            for url in urls where isVisualImage(url) {
+                assets.append(makeSavedAsset(for: url))
+            }
+        }
+
+        if let capture = captureImageURL(),
+           FileManager.default.fileExists(atPath: capture.path),
+           !assets.contains(where: { $0.fileURL == capture }) {
+            assets.append(makeSavedAsset(for: capture))
+        }
+
+        return assets.sorted { $0.createdAt > $1.createdAt }
+    }
+
+    static func importSharedItems(from inputItems: [Any]) {
+        guard let items = inputItems as? [NSExtensionItem] else { return }
+
+        for item in items {
+            for provider in item.attachments ?? [] {
+                if provider.canLoadObject(ofClass: UIImage.self) {
+                    provider.loadObject(ofClass: UIImage.self) { object, _ in
+                        guard let image = object as? UIImage else { return }
+                        saveImage(image)
+                    }
+                    continue
+                }
+
+                if provider.hasItemConformingToTypeIdentifier(UTType.image.identifier) {
+                    provider.loadPreviewImage(options: nil) { item, _ in
+                        guard let image = item as? UIImage else { return }
+                        saveImage(image)
+                    }
+                }
+            }
+        }
+    }
+
+    private static func isVisualImage(_ url: URL) -> Bool {
+        visualExtensions.contains(url.pathExtension.lowercased())
+    }
+
+    private static func makeSavedAsset(for url: URL) -> SavedAsset {
+        let date = (try? url.resourceValues(forKeys: [.creationDateKey]).creationDate) ?? .distantPast
+        return SavedAsset(id: url.lastPathComponent, fileURL: url, createdAt: date)
+    }
 }

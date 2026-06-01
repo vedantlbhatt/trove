@@ -3,66 +3,70 @@ import UIKit
 enum CaptureFlyoverPresenter {
 
     private static var overlayWindow: UIWindow?
+    private static var isPresenting = false
 
+    /// Called from trove:// URL — always try to show.
     static func presentCaptureAnimation() {
-        DispatchQueue.main.async {
-            presentNow()
-        }
+        DispatchQueue.main.async { presentNow(force: true) }
     }
 
-    private static func presentNow() {
-        _ = AppGroupStorage.consumeCapturePending()
+    /// Called when app becomes active — only if extension marked a pending capture.
+    static func presentIfPending() {
+        DispatchQueue.main.async { presentNow(force: false) }
+    }
+
+    private static func presentNow(force: Bool) {
+        guard !isPresenting else { return }
+
+        let pending = AppGroupStorage.consumeCapturePending()
+        guard force || pending else { return }
 
         guard let scene = UIApplication.shared.connectedScenes
             .compactMap({ $0 as? UIWindowScene })
             .first(where: { $0.activationState == .foregroundActive })
             ?? UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene }).first
         else {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { presentNow() }
+            if pending { AppGroupStorage.markCapturePending() }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { presentNow(force: force) }
             return
         }
 
-        let image = AppGroupStorage.loadCaptureImage() ?? placeholderImage()
+        isPresenting = true
+        dismissOverlay()
 
         let window = UIWindow(windowScene: scene)
-        window.windowLevel = .alert + 1
+        window.windowLevel = .statusBar + 1
         window.backgroundColor = .clear
         window.isOpaque = false
+        window.isUserInteractionEnabled = false
 
-        let root = FlyoverRootViewController(image: image) {
+        let root = FlyoverRootViewController {
+            isPresenting = false
             dismissOverlay()
         }
         window.rootViewController = root
-        window.makeKeyAndVisible()
+        window.isHidden = false
         overlayWindow = window
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) {
+            guard overlayWindow != nil else { return }
+            isPresenting = false
+            dismissOverlay()
+        }
     }
 
     private static func dismissOverlay() {
         overlayWindow?.isHidden = true
+        overlayWindow?.rootViewController = nil
         overlayWindow = nil
-    }
-
-    private static func placeholderImage() -> UIImage {
-        let size = CGSize(width: 120, height: 120)
-        return UIGraphicsImageRenderer(size: size).image { _ in
-            UIColor.systemIndigo.withAlphaComponent(0.85).setFill()
-            UIBezierPath(roundedRect: CGRect(origin: .zero, size: size), cornerRadius: 20).fill()
-            let config = UIImage.SymbolConfiguration(pointSize: 44, weight: .medium)
-            UIImage(systemName: "bookmark.fill", withConfiguration: config)?
-                .withTintColor(.white, renderingMode: .alwaysOriginal)
-                .draw(at: CGPoint(x: 38, y: 38))
-        }
     }
 }
 
-/// Starts animation only after the overlay view has a real frame.
 private final class FlyoverRootViewController: UIViewController {
-    private let image: UIImage
     private let onFinish: () -> Void
     private var didStart = false
 
-    init(image: UIImage, onFinish: @escaping () -> Void) {
-        self.image = image
+    init(onFinish: @escaping () -> Void) {
         self.onFinish = onFinish
         super.init(nibName: nil, bundle: nil)
     }
@@ -73,12 +77,13 @@ private final class FlyoverRootViewController: UIViewController {
         super.viewDidLoad()
         view.backgroundColor = .clear
         view.isOpaque = false
+        view.isUserInteractionEnabled = false
     }
 
-    override func viewDidLayoutSubviews() {
-        super.viewDidLayoutSubviews()
-        guard !didStart, view.bounds.width > 10, view.bounds.height > 10 else { return }
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        guard !didStart else { return }
         didStart = true
-        IslandCatchAnimator(image: image, onSave: {}, onFinish: onFinish).start(in: view)
+        IslandCatchAnimator(onFinish: onFinish).start(in: view)
     }
 }

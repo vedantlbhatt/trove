@@ -3,6 +3,7 @@ import SwiftUI
 @main
 struct TroveApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some Scene {
         WindowGroup {
@@ -10,6 +11,11 @@ struct TroveApp: App {
                 .onOpenURL { url in
                     guard url.scheme == "trove" else { return }
                     CaptureFlyoverPresenter.presentCaptureAnimation()
+                }
+                .onChange(of: scenePhase) { _, phase in
+                    if phase == .active {
+                        CaptureFlyoverPresenter.presentIfPending()
+                    }
                 }
         }
     }

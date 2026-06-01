@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		395DB2F62FB91CB100E4C555 /* AppGroupStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 395DB2F52FB91CB100E4C555 /* AppGroupStorage.swift */; };
+		395DB2F72FB91CB100E4C556 /* AppGroupStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 395DB2F52FB91CB100E4C555 /* AppGroupStorage.swift */; };
 		395DB3142FBAB14D00E4C555 /* Trove share extension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 395DB30A2FBAB14D00E4C555 /* Trove share extension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
@@ -359,6 +360,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				395DB2F72FB91CB100E4C556 /* AppGroupStorage.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
