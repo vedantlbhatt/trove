@@ -195,27 +195,93 @@ enum AppGroupStorage {
         return assets.sorted { $0.createdAt > $1.createdAt }
     }
 
-    static func importSharedItems(from inputItems: [Any]) {
-        guard let items = inputItems as? [NSExtensionItem] else { return }
+    static func importSharedItems(from inputItems: [Any], completion: @escaping () -> Void) {
+        guard let items = inputItems as? [NSExtensionItem] else {
+            completion()
+            return
+        }
 
-        for item in items {
-            for provider in item.attachments ?? [] {
-                if provider.canLoadObject(ofClass: UIImage.self) {
-                    provider.loadObject(ofClass: UIImage.self) { object, _ in
-                        guard let image = object as? UIImage else { return }
-                        saveImage(image)
+        let providers = items.flatMap { $0.attachments ?? [] }
+        guard !providers.isEmpty else {
+            completion()
+            return
+        }
+
+        let group = DispatchGroup()
+        var finished = false
+        let finish: () -> Void = {
+            guard !finished else { return }
+            finished = true
+            completion()
+        }
+
+        for provider in providers {
+            if provider.hasItemConformingToTypeIdentifier(UTType.fileURL.identifier) {
+                group.enter()
+                provider.loadItem(forTypeIdentifier: UTType.fileURL.identifier, options: nil) { item, _ in
+                    defer { group.leave() }
+                    if let url = item as? URL {
+                        _ = saveFile(at: url)
+                    } else if let url = item as? NSURL as URL? {
+                        _ = saveFile(at: url)
                     }
-                    continue
                 }
+                continue
+            }
 
-                if provider.hasItemConformingToTypeIdentifier(UTType.image.identifier) {
-                    provider.loadPreviewImage(options: nil) { item, _ in
-                        guard let image = item as? UIImage else { return }
-                        saveImage(image)
+            if provider.canLoadObject(ofClass: UIImage.self) {
+                group.enter()
+                provider.loadObject(ofClass: UIImage.self) { object, _ in
+                    defer { group.leave() }
+                    if let image = object as? UIImage {
+                        _ = saveImage(image)
                     }
+                }
+                continue
+            }
+
+            if provider.hasItemConformingToTypeIdentifier(UTType.image.identifier) {
+                group.enter()
+                provider.loadItem(forTypeIdentifier: UTType.image.identifier, options: nil) { item, _ in
+                    defer { group.leave() }
+                    if let image = item as? UIImage {
+                        _ = saveImage(image)
+                    } else if let data = item as? Data, let image = UIImage(data: data) {
+                        _ = saveImage(image)
+                    } else if let url = item as? URL, let data = try? Data(contentsOf: url), let image = UIImage(data: data) {
+                        _ = saveImage(image)
+                    }
+                }
+                continue
+            }
+
+            if provider.hasItemConformingToTypeIdentifier(UTType.url.identifier) {
+                group.enter()
+                provider.loadItem(forTypeIdentifier: UTType.url.identifier, options: nil) { item, _ in
+                    defer { group.leave() }
+                    if let url = item as? URL {
+                        appendInboxRecord(.link(url: url))
+                        provider.loadPreviewImage(options: nil) { preview, _ in
+                            if let image = preview as? UIImage {
+                                _ = saveImage(image)
+                            }
+                        }
+                    }
+                }
+                continue
+            }
+
+            group.enter()
+            provider.loadPreviewImage(options: nil) { item, _ in
+                defer { group.leave() }
+                if let image = item as? UIImage {
+                    _ = saveImage(image)
                 }
             }
         }
+
+        group.notify(queue: .global(qos: .userInitiated), execute: finish)
+        DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + 1.5, execute: finish)
     }
 
     private static func isVisualImage(_ url: URL) -> Bool {

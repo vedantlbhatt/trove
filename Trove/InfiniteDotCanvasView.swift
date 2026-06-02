@@ -50,6 +50,13 @@ struct InfiniteDotCanvasView: View {
                             y: asset.position.y + totalOffset.height
                         )
                 }
+
+                if assets.isEmpty {
+                    Text("Share to Trove from Safari or Photos")
+                        .font(.footnote)
+                        .foregroundStyle(.white.opacity(0.35))
+                        .position(x: geo.size.width / 2, y: geo.size.height / 2)
+                }
             }
             .contentShape(Rectangle())
             .gesture(
